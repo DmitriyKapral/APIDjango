@@ -76,68 +76,6 @@ class GeneralListView(APIView):
         return(data)
 
 
-class AllLibraryView(APIView):
-    def get(self, request, format = None):
-        url = "https://opendata.mkrf.ru/v2/libraries/$?l=10"
-
-        resp = requests.get(url, headers=headers)
-        data = resp.json()['data']
-        return Response(data)
-
-
-class AllCinemaView(APIView):
-    def get(self, request, format = None):
-        url = "https://opendata.mkrf.ru/v2/cinema/$?l=10"
-
-        resp = requests.get(url, headers=headers)
-        data = resp.json()['data']
-        return Response(data)
-
-
-class AllCircusesView(APIView):
-    def get(self, request, format = None):
-        url = "https://opendata.mkrf.ru/v2/circuses/$?l=10"
-
-        resp = requests.get(url, headers=headers)
-        data = resp.json()['data']
-        return Response(data)
-
-class AllConcertView(APIView):
-    def get(self, request, format = None):
-        url = "https://opendata.mkrf.ru/v2/concert_halls/$?l=10"
-
-        resp = requests.get(url, headers=headers)
-        data = resp.json()['data']
-        return Response(data)
-
-
-class AllMuseumsView(APIView):
-    def get(self, request, format = None):
-        url = "https://opendata.mkrf.ru/v2/museums/$?l=10"
-
-        resp = requests.get(url, headers=headers)
-        data = resp.json()['data']
-        return Response(data)
-
-
-class AllParksView(APIView):
-    def get(self, request, format = None):
-        url = "https://opendata.mkrf.ru/v2/parks/$?l=10"
-
-        resp = requests.get(url, headers=headers)
-        data = resp.json()['data']
-        return Response(data)
-
-
-class AllTheatersView(APIView):
-    def get(self, request, format = None):
-        url = "https://opendata.mkrf.ru/v2/theaters/$?l=10"
-
-        resp = requests.get(url, headers=headers)
-        data = resp.json()['data']
-        return Response(data)
-
-
 class GetCategoryView(APIView):
     def get(self, request, category = '', city = 'Москва', format = None):
         url = '''https://opendata.mkrf.ru/v2/'''+ category + '''/$?f={"data.general.locale.name":{"$search":"''' + city + '''"}}&l=10'''
@@ -172,3 +110,15 @@ class GetEventsView(APIView):
         resp = requests.get(url, headers=headers)
         data = resp.json()['data']
         return Response(data)
+
+    def post(self, request, city = '', date = '', format = None):
+        post_body = json.loads(request.body)
+        url = '''https://opendata.mkrf.ru/v2/events/$?f={"data.general.ageRestriction":{"$gte":"''' + str(post_body['age']) + '''"},"data.general.start":{"$gt":"''' + date + '''"},"data.general.organizerPlace.name":{"$search":"''' + city + '''"}}&l=1000'''
+        resp = requests.get(url, headers=headers)
+        data = resp.json()['data']
+        returnData = []
+        for i in range(len(data)):
+            for j in range(len(post_body['category'])):
+                if(data[i]['data']['general']['category']['name'] == post_body['category'][j]['name']):
+                    returnData.append(data[i])
+        return Response(returnData)
