@@ -92,7 +92,7 @@ class GetCategoryView(APIView):
         userPoint = Feature(geometry=Point((post_body['lat'], post_body['long'])))
         for i in range(len(data)):
             objectPoint = Feature(geometry=Point((data[i]['data']['general']['address']['mapPosition']['coordinates'][1], data[i]['data']['general']['address']['mapPosition']['coordinates'][0])))
-            if measurement.distance(userPoint, objectPoint)*1000 < post_body['radius']:
+            if measurement.distance(userPoint, objectPoint)*1000 < int(post_body['radius']):
                 returnData.append(data[i])
         return Response(returnData)
 
