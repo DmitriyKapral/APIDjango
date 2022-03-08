@@ -1,3 +1,4 @@
+from http.client import responses
 from tkinter.messagebox import NO
 from turtle import pos
 from typing import List
@@ -104,6 +105,7 @@ class GetSearchObjectView(APIView):
         data = resp.json()['data']
         return Response(data)
 
+#НЕПРАВИЛЬНО(не всё возвращает)
 class GetEventsView(APIView):
     def get(self, request, city = '', date = '', format = None):
         url = '''https://opendata.mkrf.ru/v2/events/$?f={"data.general.start":{"$gt":"''' + date + '''"},"data.general.organizerPlace.name":{"$search":"''' + city + '''"}}&l=1000'''
@@ -122,3 +124,16 @@ class GetEventsView(APIView):
                 if(data[i]['data']['general']['category']['name'] == post_body['category'][j]['name']):
                     returnData.append(data[i])
         return Response(returnData)
+
+#Тестовый класс выдачи мероприятий по организациям Волгограда
+class TestGetEventsView(APIView):
+    def get(self, request, format = None):
+        url = '''https://opendata.mkrf.ru/v2/theaters/$?f={"data.general.locale.name":{"$search":"Волгоград"}}&l=100'''
+        resp = requests.get(url, headers=headers)
+        data = resp.json()['data']
+        returndata = []
+        for i in range(len(data)):
+            url = '''https://opendata.mkrf.ru/v2/events/$?f={"data.general.start":{"$gt":"2022-03-09"},"data.general.organization.name":{"$search":"''' + data[i]['data']['general']['organization']['name'] + '''"}}&l=100'''
+            resp = requests.get(url, headers=headers)
+            returndata.extend(resp.json()['data'])
+        return Response(returndata)
