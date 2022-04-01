@@ -79,7 +79,7 @@ class GeneralListView(APIView):
 
 class GetCategoryView(APIView):
     def parsingData(self, category, city):
-        url = '''https://opendata.mkrf.ru/v2/'''+ category + '''/$?f={"data.general.locale.name":{"$search":"''' + city + '''"}}&l=100'''
+        url = '''https://opendata.mkrf.ru/v2/'''+ category + '''/$?f={"data.general.locale.name":{"$eq":"''' + city + '''"}}&l=100'''
         resp = requests.get(url, headers=headers)
         return resp.json()['data']
 
@@ -131,13 +131,12 @@ class GetSearchObjectView(APIView):
 #Тестовый класс выдачи мероприятий по организациям Волгограда
 class TestGetEventsView(APIView):
     def get(self, request, format = None):
-        url = '''https://opendata.mkrf.ru/v2/cinema/$?f={"data.general.locale.name":{"$search":"Волгоград"}}&l=100'''
+        url = '''https://opendata.mkrf.ru/v2/museums/$?f={"data.general.locale.name":{"$search":"Волгоград"}}&l=100'''
         resp = requests.get(url, headers=headers)
         data = resp.json()['data']
         returndata = []
         for i in range(len(data)):
-            url = '''https://opendata.mkrf.ru/v2/events/$?f={"data.general.start":{"$gt":"2022-03-09"},"data.general.organization.id":{"$eq":"
-            ''' + str(data[i]['data']['general']['organization']['id']) + '''"}}&l=100'''
+            url = '''https://opendata.mkrf.ru/v2/events/$?f={"data.general.start":{"$gt":"2022-03-09"},"data.general.organization.id":{"$eq":"''' + str(data[i]['data']['general']['organization']['id']) + '''"}}&l=100'''
             resp = requests.get(url, headers=headers)
             returndata.extend(resp.json()['data'])
         return Response(returndata)
@@ -146,7 +145,7 @@ class TestGetEventsView(APIView):
 #Работа с данными мероприятий, доделать цикл на поиск городов, когда несколько точек проведения события
 class GetEventsView(APIView):
     def parsingData(self, category, city):
-        url = '''https://opendata.mkrf.ru/v2/'''+ category + '''/$?f={"data.general.locale.name":{"$search":"''' + city + '''"}}&l=100'''
+        url = '''https://opendata.mkrf.ru/v2/'''+ category + '''/$?f={"data.general.locale.name":{"$eq":"''' + city + '''"}}&l=100'''
         resp = requests.get(url, headers=headers)
         return resp.json()['data']
 
@@ -186,5 +185,27 @@ class GetEventsView(APIView):
         for i in range(len(data)):
             for j in range(len(post_body['category'])):
                 returndata.extend(self.parsingEvent(current_datetime, data[i]['data']['general']['organization']['id'], post_body['ageRestriction'], 
-                post_body['isFree'], post_body['category'][j]['name']))
+                post_body['isFree'], post_body['category'][j]))
         return Response(returndata)
+
+# class GeneralView(APIView):
+#     """serializer_class = GeneralSerializer
+#     model = General"""
+
+#     def get(self, request, format = None):
+#         """
+#         List all code snippets, or create a new snippet.
+#         """
+#         url = "https://nominatim.openstreetmap.org/reverse?format=json&lat=48.7784448&lon=44.777472"
+#         resp = requests.get(url)
+#         data = resp.json()
+#         return Response(data)
+
+
+class PostCityView(APIView):
+    def post(self, request, format = None):
+        post_body = json.loads(request.body)
+        url = "https://nominatim.openstreetmap.org/reverse?format=json&lat=" + str(post_body['lat']) +"8&lon=" + str(post_body['lon'])
+        resp = requests.get(url)
+        data = resp.json()['address']['city']
+        return Response(data)
