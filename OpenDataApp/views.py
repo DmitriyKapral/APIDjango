@@ -15,15 +15,12 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework import viewsets
 from rest_framework.views import APIView
-from .serializers import GeneralSerializer
 from rest_framework import status
-from .models import Address, Category, City, Contacts, Gallery, General, Image, Organization, Phones
-from OpenDataApp import serializers
 import requests
 from requests.structures import CaseInsensitiveDict
 from turfpy import measurement
 from geojson import Point, Feature
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from dateutil import parser
 
 
@@ -141,7 +138,7 @@ class GetEventsView(APIView):
         for i in range(len(data)):
             countCategory = 0
             for j in range(len(data[i-count]['data']['general']['places'])):
-                print(j)
+                # print(j)
                 if not 'category' in data[i-count]['data']['general']['places'][j-countCategory]:
                     del data[i-count]['data']['general']['places'][j-countCategory]
                     countCategory += 1
@@ -192,4 +189,25 @@ class PostCityView(APIView):
         url = "https://nominatim.openstreetmap.org/reverse?format=json&lat=" + str(post_body['lat']) +"8&lon=" + str(post_body['lon'])
         resp = requests.get(url)
         data = resp.json()['address']['city']
+        return Response(data)
+
+
+class GetCountEventsToYear(APIView):
+    def get(self, request, city = '', category = '', format = None):
+        to_date = datetime.now()
+        month = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
+        data = []
+        url = '''https://opendata.mkrf.ru/v2/events/$?f={"data.general.start":{"$gt":"''' + str(to_date - timedelta(days=365)) + '''"},"data.general.end":{"$lt":"''' + str(to_date) + '''"},"data.general.category.name":{"$search":"''' + category + '''"},"data.general.places[].locale.name":{"$eq":"''' + city + '''"}}&l=1000'''
+        resp = requests.get(url, headers=headers)
+        var = resp.json()['data']
+        for i in range(12):
+            count = 0
+            after_date = to_date
+            to_date = after_date - timedelta(days=30)
+            for j in range(len(var)):
+                for x in range(len(var[j]['data']['general']['seances'])):
+                    if datetime.strptime(var[j]['data']['general']['seances'][x]['start'], "%Y-%m-%dT%H:%M:%SZ") > to_date and datetime.strptime(var[j]['data']['general']['seances'][x]['end'], "%Y-%m-%dT%H:%M:%SZ") < after_date:
+                        count = count + 1
+            #data.append({'month': month[after_date.month-1], 'count': resp.json()['count']})
+            data.append({'month': month[after_date.month-1], 'count': count})
         return Response(data)

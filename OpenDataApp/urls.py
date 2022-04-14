@@ -9,7 +9,8 @@ urlpatterns = [
     re_path(r"^searchObject/(?P<category>[^\d]+)/(?P<city>[^\d]+)/(?P<search>[^\d]+)/$", views.GetSearchObjectView.as_view()),
     re_path(r"^testevent/$", views.TestGetEventsView.as_view()),
     re_path(r"^geteventscategory/(?P<city>[^\d]+)/$", views.GetEventsView.as_view()),
-    re_path(r"^position/$", views.PostCityView.as_view())
+    re_path(r"^position/$", views.PostCityView.as_view()),
+    re_path(r"^getcountevents/(?P<category>[^\d]+)/(?P<city>[^\d]+)/$", views.GetCountEventsToYear.as_view())
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
