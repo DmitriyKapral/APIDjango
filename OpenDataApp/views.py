@@ -54,7 +54,7 @@ class GeneralListView(APIView):
 
 class GetCategoryView(APIView):
     def parsingData(self, category, city):
-        url = '''https://opendata.mkrf.ru/v2/'''+ category + '''/$?f={"data.general.locale.name":{"$eq":"''' + city + '''"}}&l=100'''
+        url = '''https://opendata.mkrf.ru/v2/'''+ category + '''/$?f={"data.general.locale.name":{"$eq":"''' + city + '''"}}&l=1000'''
         resp = requests.get(url, headers=headers)
         return resp.json()['data']
 
@@ -99,38 +99,13 @@ class TestGetEventsView(APIView):
 
 #Работа с данными мероприятий, доделать цикл на поиск городов, когда несколько точек проведения события
 class GetEventsView(APIView):
-    # def parsingData(self, category, city):
-    #     url = '''https://opendata.mkrf.ru/v2/'''+ category + '''/$?f={"data.general.locale.name":{"$eq":"''' + city + '''"}}&l=100'''
-    #     resp = requests.get(url, headers=headers)
-    #     return resp.json()['data']
-
-    # def parsingEvent(self, datetime, id, ageRestriction = 0, isFree = 2, category = ''):
-    #     if isFree >=2:
-    #         isFreeString = ""
-    #     elif isFree == 1:
-    #         isFreeString = '''"data.general.isFree":{"$eq":"1"},'''
-    #     else:
-    #         isFreeString = '''"data.general.isFree":{"$eq":"0"},'''
-
-    #     if not category:
-    #         categoryString = ""
-    #     else:
-    #         categoryString = '''"data.general.category.name":{"$search":"''' + category + '''"},'''
-
-    #     #url = '''https://opendata.mkrf.ru/v2/events/$?f={"data.general.start":{"$gt":"''' + str(datetime) + '''"},"data.general.organization.id":{"$eq":"''' + str(id) + '''"}}&l=100'''
-    #     url = '''https://opendata.mkrf.ru/v2/events/$?f={"data.general.ageRestriction":{"$gte":"'''+ str(ageRestriction) +'''"},''' + isFreeString + '''
-    #     "data.general.start":{"$gt":"''' + str(datetime) + '''"},''' + categoryString + '''"data.general.organization.id":{"$eq":"''' + str(id) + '''"}}&l=100'''
-        
-    #     resp = requests.get(url, headers=headers)
-    #     return resp.json()['data']
-    
     def get(self, request, city = '', format = None):
         # data = self.parsingData(category, city)
         # returndata = []
-        current_datetime = date.today()
+        current_datetime = datetime.now()
         # for i in range(len(data)):
         #     returndata.extend(self.parsingEvent(current_datetime, data[i]['data']['general']['organization']['id']))
-        url = '''https://opendata.mkrf.ru/v2/events/$?f={"data.general.end":{"$gt":"''' + str(current_datetime) + '''"},"data.general.places[].locale.name":{"$eq":"''' + city + '''"}}&l=100'''
+        url = '''https://opendata.mkrf.ru/v2/events/$?f={"data.general.end":{"$gt":"''' + str(current_datetime) + '''"},"data.general.places[].locale.name":{"$eq":"''' + city + '''"}}&l=1000'''
         resp = requests.get(url, headers=headers)
         data = resp.json()['data']
         count = 0
@@ -149,39 +124,13 @@ class GetEventsView(APIView):
             if not data[i-count]['data']['general']['places']:
                 del data[i-count]
                 count += 1
-            # countSeances = 0
-            # for u in range(len(data[i-count]['data']['general']['seances'])):
-            #     if  parser.parse(data[i-count]['data']['general']['seances'][u-countSeances]['end']) < current_datetime:
-            #         del data[i-count]['data']['general']['seances'][u-countSeances]
-            #         countSeances += 1
+            countSeances = 0
+            for u in range(len(data[i-count]['data']['general']['seances'])):
+                if  datetime.strptime(data[i-count]['data']['general']['seances'][u-countSeances]['end'], "%Y-%m-%dT%H:%M:%SZ") < current_datetime:
+                    del data[i-count]['data']['general']['seances'][u-countSeances]
+                    countSeances += 1
 
-        #data = [x['data']['general']['places'] for x in data if x['locale']['name'] == city]
         return Response(data)
-
-    # def post(self, request, category = '', city = '', format = None):
-    #     post_body = json.loads(request.body)
-    #     data = self.parsingData(category, city)
-    #     returndata = []
-    #     current_datetime = date.today()
-    #     for i in range(len(data)):
-    #         for j in range(len(post_body['category'])):
-    #             returndata.extend(self.parsingEvent(current_datetime, data[i]['data']['general']['organization']['id'], post_body['ageRestriction'], 
-    #             post_body['isFree'], post_body['category'][j]))
-    #     return Response(returndata)
-
-# class GeneralView(APIView):
-#     """serializer_class = GeneralSerializer
-#     model = General"""
-
-#     def get(self, request, format = None):
-#         """
-#         List all code snippets, or create a new snippet.
-#         """
-#         url = "https://nominatim.openstreetmap.org/reverse?format=json&lat=48.7784448&lon=44.777472"
-#         resp = requests.get(url)
-#         data = resp.json()
-#         return Response(data)
-
 
 class PostCityView(APIView):
     def post(self, request, format = None):
