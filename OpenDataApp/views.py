@@ -160,3 +160,19 @@ class GetCountEventsToYear(APIView):
             #data.append({'month': month[after_date.month-1], 'count': resp.json()['count']})
             data.append({'month': month[after_date.month-1], 'count': count})
         return Response(data)
+    
+class GetCountObjectsToCity(APIView):
+    def get(self, request, city = '', format = None):
+        
+        categoryNameParsing = ["libraries", "cinema", "circuses", "concert_halls", "museums", "parks", "theaters", "culture_palaces_clubs"]
+        categoryNameObject = ["Библиотеки", "Кинотеатры", "Цирки", "Концертные залы", "Музеи и галереи", "Парки", "Театры", "ДК и клубы"]
+        count = []
+        for i in range(len(categoryNameParsing)):
+            url = '''https://opendata.mkrf.ru/v2/'''+ categoryNameParsing[i] + '''/$?f={"data.general.locale.name":{"$eq":"''' + city + '''"}}&l=1000'''
+            resp = requests.get(url, headers=headers)
+            count.append(str(resp.json()['count']))
+            #data.append({'name': categoryNameObject[i], 'count': resp.json()['count']})
+        data = {'name': categoryNameObject, 'count': count}
+        return Response(data)
+
+        
