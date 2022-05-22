@@ -29,27 +29,7 @@ headers["Accept"] = "application/json"
 headers["X-API-KEY"] = "8bb73f27c25ad10e2ee76f800b6e1a9f63aa2ae6dea659e3288ddea6499186da"
 
 
-class GeneralView(APIView):
-    """serializer_class = GeneralSerializer
-    model = General"""
 
-    def get(self, request, format = None):
-        """
-        List all code snippets, or create a new snippet.
-        """
-        url = "https://nominatim.openstreetmap.org/reverse?format=json&lat=48.7784448&lon=44.777472"
-        resp = requests.get(url)
-        data = resp.json()
-        return Response(data)
-
-class GeneralListView(APIView):
-
-    def get(self, request, pk, format = None):
-        url = "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=-34.44076&lon=-58.70521"
-
-        resp = requests.get(url)
-        data = resp.json()
-        return(data)
 
 
 class GetCategoryView(APIView):
@@ -73,28 +53,6 @@ class GetCategoryView(APIView):
             if measurement.distance(userPoint, objectPoint)*1000 < int(post_body['radius']):
                 returnData.append(data[i])
         return Response(returnData)
-
-#ПОД ВОПРОСОМ!!!
-class GetSearchObjectView(APIView):
-    def get(self, request, category = '', city = 'Москва', search = '', format = None):
-        url = '''https://opendata.mkrf.ru/v2/'''+ category +'''/$?f={"data.general.name":{"$contain":"''' + search + '''"},
-        "data.general.locale.name":{"$search":"''' + city +'''"}}&l=10'''
-        resp = requests.get(url, headers=headers)
-        data = resp.json()['data']
-        return Response(data)
-
-#Тестовый класс выдачи мероприятий по организациям Волгограда
-class TestGetEventsView(APIView):
-    def get(self, request, format = None):
-        url = '''https://opendata.mkrf.ru/v2/museums/$?f={"data.general.locale.name":{"$search":"Волгоград"}}&l=100'''
-        resp = requests.get(url, headers=headers)
-        data = resp.json()['data']
-        returndata = []
-        for i in range(len(data)):
-            url = '''https://opendata.mkrf.ru/v2/events/$?f={"data.general.start":{"$gt":"2022-03-09"},"data.general.organization.id":{"$eq":"''' + str(data[i]['data']['general']['organization']['id']) + '''"}}&l=100'''
-            resp = requests.get(url, headers=headers)
-            returndata.extend(resp.json()['data'])
-        return Response(returndata)
 
 
 #Работа с данными мероприятий, доделать цикл на поиск городов, когда несколько точек проведения события
