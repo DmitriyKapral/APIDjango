@@ -36,7 +36,11 @@ class GetCategoryView(APIView):
     def parsingData(self, category, city):
         url = '''https://opendata.mkrf.ru/v2/'''+ category + '''/$?f={"data.general.locale.name":{"$eq":"''' + city + '''"}}&l=1000'''
         resp = requests.get(url, headers=headers)
-        return resp.json()['data']
+        data = resp.json()['data']
+        for i in range(len(data)):
+            del data[i]['data']["info"]
+            del data[i]["odSetVersions"]
+        return data
 
     def get(self, request, category = '', city = 'Москва', format = None):
         data = self.parsingData(category, city)
@@ -69,6 +73,8 @@ class GetEventsView(APIView):
         count = 0
         
         for i in range(len(data)):
+
+
             countCategory = 0
             for j in range(len(data[i-count]['data']['general']['places'])):
                 # print(j)
